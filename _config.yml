@@ -3,7 +3,7 @@
 
 # Uncomment and set the URL of your site (with protocol, e.g. `https://`)
 # NOTE: You don't need to provide this property when hosting on GitHub Pages or Netlify.
-url:                   https://pabloariasal.github.io
+url:                   https://i-sharma.github.io
 
 # Uncomment and set the "base URL" of your site.
 # When your site is in a subdirectory, set to `/<name of directory>`,
@@ -20,15 +20,15 @@ baseurl:               ''
 lang:                  en
 
 # The title of your blog. Used in the sidebar and the browser tab.
-title:                 pablo arias
+title:                 Ishan Sharma
 
 # A short description (~150 chars) of the page used for the meta description tag.
 # Can use markdown, but no more than one paragraph (enforced by `>`)
 description:           >
-  Personal blog documenting my journey as a software engineer.
+  Musings and observations of an engineer navigating life.
 
 # A shorter description for the sidebar.
-tagline:               Documenting the little stuff I know.
+tagline:               Conversations with myself.
 
 # A list of keywords for your blog
 keywords:              []
@@ -42,10 +42,10 @@ favicon:               /assets/img/logo.png
 # This should be the same author as first entry in `_data/authors.yml`.
 author:
   # Used by `jekyll-feed`:
-  name:                Pablo Arias
-  email:               pabloariasal@gmail.com
+  name:                Ishan Sharma
+  email:               ishans996@gmail.com  
   # Used by `jekyll-seo-tag`:
-  twitter:             pabloariasal
+  twitter:             
 
 # Add links to the sidebar.
 menu:
@@ -53,12 +53,12 @@ menu:
     url:               /all/
   - title:             C++
     url:               /tag-cpp/
-  - title:             Python
-    url:               /tag-python/
-  - title:             Vim
-    url:               /tag-vim/
-  - title:             Lua
-    url:               /tag-lua/
+  - title:             Guitar
+    url:               /tag-guitar/
+  - title:             Motorcycles
+    url:               /tag-motorcycles/
+  - title:             Table Tennis
+    url:               /tag-tt/
   - title:             About
     url:               /about/
 
@@ -94,8 +94,11 @@ remote_theme: hydecorp/hydejack@v9.1.6
 # ----------------------------------------------------------------------------------------
  
 # Sidebar image and theme color of the site.
-accent_image:          /assets/img/sidebar.jpg
+accent_image:          /assets/img/left_pane.png
+# accent_image:          /assets/img/sidebar.jpg
 accent_color:          rgb(177, 113, 35)
+
+invert_sidebar: true
 
 # This is used for the `theme-color` meta tag,
 # which changes the background color of the browser UI in certain browsers.
