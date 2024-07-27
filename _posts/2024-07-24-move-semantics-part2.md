@@ -4,6 +4,8 @@ title: >
   Move symantics: Design and Rules of thumb
 ---
 
+# Move symantics: Design and Rules of thumb
+
 <span style="color:red">TODO: Please read part 1 and two</span>.
 
 lvalue rvalue, lvalue ref

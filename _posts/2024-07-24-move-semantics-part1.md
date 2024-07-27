@@ -10,7 +10,7 @@ image:
     # 240w: /assets/img/posts/git_worktree/worktree.png@0,25x.png
 ---
 
-# Move symantics: Once and for all
+# Move symantics: Introduction
 
 Triumph Bonneville T120. Isn't she beautiful?
 
