@@ -1,16 +1,17 @@
 ---
 layout: post
 title: >
-  Move symantics: Introduction
+  Move semantics: Introduction
 image:
-  path:    /assets/img/posts/move_symantics/bonneville-t120.jpg
+  path:    /assets/img/posts/move_semantics/bonneville-t120.jpg
   srcset:
-    960w: /assets/img/posts/move_symantics/bonneville-t120.jpg
-    # 480w: /assets/img/posts/git_worktree/worktree.png@0,5x.png
-    # 240w: /assets/img/posts/git_worktree/worktree.png@0,25x.png
+    960w: /assets/img/posts/move_semantics/bonneville-t120.jpg
+    480w: /assets/img/posts/move_semantics/bonneville-t120@0,5x.jpg
+    240w: /assets/img/posts/move_semantics/bonneville-t120@0,25x.jpg
+tags: [cpp]
 ---
 
-# Move symantics: Introduction
+# Move semantics: Introduction
 
 Triumph Bonneville T120. Isn't she beautiful?
 
@@ -22,7 +23,7 @@ Today, I'll write about something that I kind of understood the first time I rea
 
 A few days in, I already got a feeling that making copies of objects is bad. Perhaps because my manager promised me a toffee for each instance of copying that I identified in the codebase, humbly bragging that I wouldn't be able to (I wasn't :')).
 
-The gist of the problem is that we want a way to implement move symantics and perfect forwarding in cpp. What are these and why should you care? Read on to find out.
+The gist of the problem is that we want a way to implement move semantics and perfect forwarding in cpp. What are these and why should you care? Read on to find out.
 
 #### So, what's copying?
 
@@ -59,11 +60,13 @@ Quick question: what's `sizeof(A)`, given `sizeof(int)` is 4, `sizeof(char)` is 
     If you answered 9, please have a look at <a href = "https://learn.microsoft.com/en-us/cpp/cpp/alignment-cpp-declarations?view=msvc-170">structure aligment</a>. While you are at it, also look at [endianness](https://en.wikipedia.org/wiki/Endianness).
 </details>
 
+
 Here, `x` is initialized with `x.p = 10, x.q = 20, x.r = 30`. `y` is allocated memory on stack and `x`'s contents are copied (think in bytes) in `y`'s memory location.
 
 I encourage you to predict values of `y`'s members and run the snippet above to find if you were right.
 
-<span style="color:red">TODO: explain this using image</span>.
+<img src="/assets/img/posts/move_semantics/copy_struct.png" width="700" height="auto">
+
 
 #### Copy Semantics
 
@@ -121,12 +124,19 @@ public:
 };
 ~~~
 
-<span style="color:red">TODO: Copy constr vs copy asgn op</span>.
-
-
 > `rhs` here is a const lvalue reference to allow the parameter to be an lvalue or rvalue. We'll talk about these terms in detail in the coming sections.
 
 It's left up to the reader to reason about the correctness of the above snippet.
+
+Copy constructor is called when a new object is instantiated using an existing object, whereas copy assignment operator is called when an existing object is overwritten with another existing object.
+
+~~~cpp
+DynamicArray arr1 = DynamicArray(5);    // constructor
+DynamicArray arr2(10);                  // constructor
+DynamicArray arr3 = arr1;               // copy constructor
+arr3 = arr2;                            // copy assignment operator
+~~~
+
 
 Okay, this works. Let's see what happens when we execute `y = x;`, where these objects were pre initialized and are of the type `DynamicArray`.
 
@@ -158,19 +168,13 @@ The end result would be the same without the need of an additional copy and dest
 
 This scenario was so common, the potential performance benefits so undeniable that the language designers could not ignore it. But, there was no way (prior to C++11) to know whether a function's parameter was an actual object or it was a temporary. The designers had to create the concept of rvalue references to solve the problem.
 
-Let's look at rvalue references next. 
-
-
-
-
-
-
-
-
-
-
-
+Let's look at rvalue references next in [Part2](2024-07-24-move-semantics-part2.md).
 
 
 
 # References
+
+[1] [learncpp](https://www.learncpp.com/) <br>
+[2] [Thomas Becker's amazing article](http://thbecker.net/articles/rvalue_references/section_01.html) <br>
+[3] [Scott Meyers' article that made me rage](https://isocpp.org/blog/2012/11/universal-references-in-c11-scott-meyers) <br>
+[4] [Performance tests](https://www.modernescpp.com/index.php/copy-versus-move-semantic-a-few-numbers/) <br>
