@@ -15,7 +15,7 @@ tags: [cpp]
 
 Triumph Bonneville T120. Isn't she beautiful?
 
-I've been a full time C++ programmer for a year now. Coming out of college, I thought I knew C++, having extensively practiced [DSA](https://techdevguide.withgoogle.com/paths/data-structures-and-algorithms/) (as is the trend nowadays) using the language. After all, I had the syntax for declaring an [indexed set](https://codeforces.com/blog/entry/5631) memorised! I know, I am not proud of it (now). But I soon discovered, modern cpp is a different beast. What I knew of cpp was a combination of standard C and STL. But there' more in modern cpp, a lot more.
+I've been a full time C++ programmer for a year now. Coming out of college, I thought I knew C++, having extensively practiced [DSA](https://techdevguide.withgoogle.com/paths/data-structures-and-algorithms/) (as is the trend nowadays) using the language. After all, I had the syntax for declaring an [indexed set](https://codeforces.com/blog/entry/11080) memorised! I know, I am not proud of it (now). But I soon discovered, modern cpp is a different beast. What I knew of cpp was a combination of standard C and STL. But there' more in modern cpp, a lot more.
 
 Today, I'll write about something that I kind of understood the first time I read it, but not really. After a couple of months, all I had left were doubts. So, I decided to learn the subject properly this time and document my learnings. This article is a result of theory from cpp gods on the internet and my experiments.
 
@@ -57,11 +57,14 @@ Quick question: what's `sizeof(A)`, given `sizeof(int)` is 4, `sizeof(char)` is 
 
 <details>
     <summary>Answer</summary>
-    If you answered 9, please have a look at <a href = "https://learn.microsoft.com/en-us/cpp/cpp/alignment-cpp-declarations?view=msvc-170">structure aligment</a>. While you are at it, also look at [endianness](https://en.wikipedia.org/wiki/Endianness).
+    If you answered 9, please have a look at <a href = "https://learn.microsoft.com/en-us/cpp/cpp/alignment-cpp-declarations?view=msvc-170">structure aligment</a>. While you are at it, also look at <a href = "https://en.wikipedia.org/wiki/Endianness">endianness</a>.
+
+    <br>
 </details>
 
+<br>
 
-Here, `x` is initialized with `x.p = 10, x.q = 20, x.r = 30`. `y` is allocated memory on stack and `x`'s contents are copied (think in bytes) in `y`'s memory location.
+Here, `x` is initialized with `x.p = 10, x.q = 20, x.r = 30`. `y` is allocated memory on stack and `x`'s contents are copied (think in bytes) into `y`'s memory location.
 
 I encourage you to predict values of `y`'s members and run the snippet above to find if you were right.
 
@@ -70,7 +73,7 @@ I encourage you to predict values of `y`'s members and run the snippet above to 
 
 #### Copy Semantics
 
-How would the same work in case of a class? cpp offers control over how a class can be initialized and copied. It does so using *Constructor/Copy Constructor* and *Copy Assignment operator* respectively. 
+How would the same work in case of a class? C++ offers control over how an object can be initialized using *Constructor* and how it can be copied using *Copy Constructor* and *Copy Assignment operator*. 
 
 Suppose there's a class `DynamicArray`, which holds size `n` and pointer `ptr` to a valid contiguous memory location in heap of size `n`.
 
@@ -151,13 +154,13 @@ y = DynamicArray(5);
 ~~~
 
 Let's understand what happens in the evaluation of this expression step by step:
-1. A temporary is created as `DynamicArray(5)` is evaluated, which resource (5 bytes) once.
+1. A temporary is created as `DynamicArray(5)` is evaluated, which allocates resource (5 bytes) once.
 2. `y`'s copy assignment operator is called, where the temporary is referred to as `rhs`.
 3. `y`'s existing resources are freed up.
-4. `rhs`'s resource is cloned and attached to `y`.
+4. `rhs`'s resources are cloned and attached to `y`.
 5. When the method exits, `rhs`'s lifetime is over, so is the temporary's. Thus, the temporary's destructor is called where resource allocated in (1) is destructed.
 
-This seems wasteful, doesn't it? What if the flow looked something like this when the copy assignment operator is called with an parameter that is actually a temporary:
+This seems wasteful, doesn't it? What if the flow looked something like this when the copy assignment operator is called with a parameter that is actually a temporary:
 1. ... same ...
 2. swaps pointers to the this->resource and rhs.resource
 3. ... not needed ...
@@ -166,7 +169,7 @@ This seems wasteful, doesn't it? What if the flow looked something like this whe
 
 The end result would be the same without the need of an additional copy and destruction.
 
-This scenario was so common, the potential performance benefits so undeniable that the language designers could not ignore it. But, there was no way (prior to C++11) to know whether a function's parameter was an actual object or it was a temporary. The designers had to create the concept of rvalue references to solve the problem.
+This scenario was so common, the potential performance benefits so undeniable that the language designers could not ignore it. But, there was no way (prior to C++11) to know whether a function's parameter was an actual object or a temporary. The designers had to create the concept of rvalue references to solve the problem.
 
 Let's look at rvalue references next in [Part2](2024-07-24-move-semantics-part2.md).
 

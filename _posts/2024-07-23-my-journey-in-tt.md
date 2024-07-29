@@ -1,11 +1,11 @@
 ---
 layout: post
 title: >
-  My journey in TT
+  My journey in Table Tennis
 tags: [misc]
 ---
 
 
-# My journey in TT
+# My journey in Table Tennis
 
-From holding a bat to playing not bad.
+Coming soon.

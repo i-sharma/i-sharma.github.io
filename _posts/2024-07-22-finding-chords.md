@@ -8,4 +8,4 @@ tags: [guitar]
 
 # My process for finding chords
 
-Scales and more.
+Coming soon.
