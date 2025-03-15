@@ -2,7 +2,7 @@
 layout: post
 title: >
   Calmness is a skill
-tags: [motorcycles]
+tags: [hobbies]
 ---
 
 

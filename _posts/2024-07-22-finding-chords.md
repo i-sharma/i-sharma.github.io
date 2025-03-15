@@ -2,7 +2,7 @@
 layout: post
 title: >
   My process for finding chords
-tags: [guitar]
+tags: [hobbies]
 ---
 
 

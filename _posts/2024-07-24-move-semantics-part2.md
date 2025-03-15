@@ -2,7 +2,7 @@
 layout: post
 title: >
   Move semantics: Design and Rules of thumb
-tags: [cpp]
+tags: [hobbies]
 ---
 
 # Move semantics: Design and Rules of thumb

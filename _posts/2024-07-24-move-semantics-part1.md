@@ -8,7 +8,7 @@ image:
     960w: /assets/img/posts/move_semantics/bonneville-t120.jpg
     480w: /assets/img/posts/move_semantics/bonneville-t120@0,5x.jpg
     240w: /assets/img/posts/move_semantics/bonneville-t120@0,25x.jpg
-tags: [cpp]
+tags: [hobbies]
 ---
 
 # Move semantics: Introduction

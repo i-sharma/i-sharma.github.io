@@ -51,14 +51,10 @@ author:
 menu:
   - title:             All Posts
     url:               /all/
-  - title:             C++
-    url:               /tag-cpp/
-  - title:             Guitar
-    url:               /tag-guitar/
-  - title:             Motorcycles
-    url:               /tag-motorcycles/
-  - title:             Miscellaneous
-    url:               /tag-misc/
+  - title:             AI agents
+    url:               /tag-ai-agents/
+  - title:             Hobbies
+    url:               /tag-hobbies/
   - title:             About
     url:               /about/
 

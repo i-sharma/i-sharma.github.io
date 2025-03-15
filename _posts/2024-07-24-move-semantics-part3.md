@@ -2,7 +2,7 @@
 layout: post
 title: >
   Move semantics: Perfect Forwarding
-tags: [cpp]
+tags: [hobbies]
 ---
 
 # Move semantics: Perfect Forwarding

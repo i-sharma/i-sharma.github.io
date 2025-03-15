@@ -2,7 +2,7 @@
 layout: post
 title: >
   My journey in Table Tennis
-tags: [misc]
+tags: [hobbies]
 ---
 
 
