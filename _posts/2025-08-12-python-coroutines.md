@@ -7,24 +7,29 @@ tags: [hobbies]
 
 # Notes on async-await in Python
 
-I have glanced through the subject of coroutines in python a few times already. It's inevitable that I'll forget what they are in the future, hence my hope is that this article will serve as a refresher to the future me (and may it be helpful to the distinguished reader in some capacity).
+I’ve glanced through coroutines in Python a few times already. It’s inevitable I’ll forget the details, so this note is a refresher for future-me (and, in some capacity, useful to a distinguished passerby).
 
-We are not going in depth. If the python async programming environment were a machine, today we are not dismantling the machine to take a look at the mechanics. Instead, we'll look at the buttons this machine exposes and what happens when you press these buttons.
+We’re not taking apart the engine today. If the Python async world were a machine, we’re just pressing the buttons to see what lights up.
 
-## What's async programming?
+---
+
+## 1) What is async programming?
 
 **Is it the same as multithreading?** *Nope.*
 
-It's easy to confuse asynchronous programming with multithreading (I did). They are both ways to get your computer to do a set of things faster. Maybe I can phrase that better. 
+It’s easy to confuse async with threads (I did). They both try to reduce *wall-clock* time, but they do it differently.
 
-Let's say you have one job for the computer. Now your computer has the CPU, RAM, network and hard drive. Your job has parts where it is scheduled on the CPU and other parts where it is waiting for I/O from network or the hard drive. Now this job is happy because it's undisturbed by other jobs. There are times when the job is scheduled on the CPU - performing computations, while at other instances it's waiting for I/O. There isn't much we can do to reduce the turnaround time of this job without changing the core algorithm behind this job. 
+Think about a single job. It alternates between **CPU time** (compute) and **I/O wait** (disk/network). With one job, you usually can’t beat its turnaround time without changing the algorithm.
 
-> **Turnaround time** is the duration of time required for the job to finish.<br> 
-> T<sub>turnaround</sub> = T<sub>finish</sub> - T<sub>start</sub>
+> **Turnaround time** = time to finish the job.  
+> T<sub>turnaround</sub> = T<sub>finish</sub> − T<sub>start</sub>
 
-Let's say there's a bundle, comprising of 10 such jobs, and you care about the turnaround time of this bundle. You still have access to one CPU core. What do you do? The naive way to do it is chain 10 blocking calls, one after the other. This is called synchronous programming. 
+Now imagine **10 independent jobs** on **one CPU core**.
 
-How do we do better? Perhaps multithreading crosses your mind. You launch 10 threads, each tasked with the completion of a job and the main thread waits for (technically, joins) these threads. Let's see what this looks like in code.
+- **Synchronous (naïve):** call them one after another (10 blocking calls).
+- **Multithreading:** start 10 threads; while some threads are waiting on I/O, others can run.
+
+### Threads example
 
 ~~~python
 import time
@@ -49,15 +54,29 @@ for t in threads:
     t.join()
 ~~~
 
-This way, the responsibility of scheduling these threads is offloaded to the OS. To see a visualization of multithreading in Linux, take a look at [this post](2025-08-12-multithreading-visualization.md).
+Here, the OS scheduler decides which thread runs.  
+*Footnote for Python folks:* due to the **GIL**, only one thread executes Python bytecode at a time in CPython. Threads still help when you spend time waiting on I/O; they don’t speed up CPU-bound Python code. (For CPU-bound work, think **multprocessing** or native extensions.)
 
-<span style="color:red">*TODO:*</span> what's wrong with multithreading? why async programming have a clear cut bridge.
+**Where threads bite (and why async exists):**
+- Shared-state complexity (locks, races, heisenbugs).
+- Context-switch overhead when you scale out.
+- In CPython, limited wins for CPU-bound work.
+- Hard to express “do these 200 I/O things, then continue” without a small forest of threads.
 
-Let us now take a look at the paradigm of asynchronous programming. I say this is a programming paradigm because it's a fundamental shift in the mental model of the programmer's approach to solving the forementioned problem. A central idea in asynchronous programming is the existence of the event loop - I think of it as a while loop placed on top of a queue. The programmer can submit a job to the queue, and it is the event loop's responsibility to see all the jobs in its jurisdiction to completion by scheduling and preempting them as required.
+Async tackles the same class of problems (lots of I/O) with a different **control-flow style**.
 
-## Python coroutines
+---
 
-Let's understand asynchronous programming with an example - the same problem as before.
+## 2) Event loop: the mental model
+
+Picture an **event loop**: a loop that drives a queue of tasks. Tasks run until they **await** something, then politely **yield**. When that thing is ready, the loop resumes them right after the `await`. This is **cooperative** scheduling (no preemption by the loop itself).
+
+Threads are like trying to hold ten phone conversations on ten different handsets at once; async is putting each call on speaker, hitting “mute,” and letting the callers shout “I’m back!” when they need your attention.
+---
+
+## 3) Coroutines with `asyncio`
+
+Same 10-job scenario, async-style:
 
 ~~~python
 import asyncio
@@ -66,11 +85,11 @@ async def job(n: int) -> int:
     # CPU-bound simulation
     acc = sum(i * i for i in range(n * 1000))
     # I/O-bound simulation
-    await asyncio.sleep(n)  
+    await asyncio.sleep(n)
     return acc
 
 async def main():
-    tasks = [asyncio.create_task(job(i)) for i in range(10)] 
+    tasks = [asyncio.create_task(job(i)) for i in range(10)]
     results = await asyncio.gather(*tasks)
     print(results)
 
@@ -78,12 +97,16 @@ if __name__ == "__main__":
     asyncio.run(main())
 ~~~
 
-The following concepts will help us wrap our heads around this code snippet:
-- Futures
-- asyncio library and its APIs
-- Language features: async-await
+Things to keep in your head:
+- **Futures**
+- **`asyncio`** and a few core APIs
+- Language constructs: **`async` / `await`**
 
-`asyncio` is the library that provides the machinery for the event loop we discussed earlier. Before diving into asyncio, let's first take a look at what futures are.
+`asyncio` provides the event loop and the primitives to schedule / pause / resume work.
+
+---
+
+## 4) Futures (or: the pizza box)
 
 ~~~python
 # Synchronous programming
@@ -93,72 +116,19 @@ result = start_and_finish_job()
 result_future = started_but_unfinished_job()
 ~~~
 
+A **future** is a container for a result that will exist *later*.
 
-**`futures` lie at the core of asynchronous programming.**
+Imagine a very advanced pizzeria: you place an order and receive a **box** immediately. The pizza will “materialize” in the box when it’s ready. You chat, you peek, you wait only when you actually want to eat. The box is the **future**: the job is underway; you’ll collect the result when it’s done.
 
-When we are programming synchronously, the return value of a function call usually contains the result which we are free to use just after the function call - there are no two ways about it. We call this a blocking call.
+Python smooths this so well that most of the time you don’t think about futures directly.
 
-In the async world, the caller has an option to tell the language to start working on a job, work on it in the background and let them know if the job is done when asked. 
+---
 
-Say you order a pizza at a restaurant and they hand you a box, and ask you to take a seat at a table nearby - strange! This is a high-tech restaurant and they say you need not come over to the counter to collect your order, the pizza will materialize inside your box when it's ready!!
+## 5) `async` / `await` in practice
 
-You marvel at the rate technology is progressing and you get busy chatting with your dining companion, your friend or your laptop, depending on your social circle :)
+Calling an `async def` function returns a **coroutine object**; it doesn’t run until you **await** it or wrap it in a **Task**.
 
-After 10 mins, you remember about the pizza and check the box by lifting the lid, it's not yet ready. It's alright - you get back to your interesting conversation. 5 more mins pass and you are hungry. This time, you keep the lid open because you have run out of topics to discuss and want to start eating as soon as the pizza arrives, and it appears in a couple of minutes. You are happy, and you once again can't help chuckling at rate of progress of technology.
-
-That box is the `future`. It's a container for job that has started and is being worked on, but may not be finished yet.
-
-~~~python
-function orderPizza():
-    # Start the pizza-making job in the background
-    futurePizza = startBackgroundJob(makePizza)
-    return futurePizza
-
-
-function main():
-    # Step 1: Place the order
-    pizzaBox = orderPizza()   // returns a Future object
-
-    # Step 2: Chat with your friend/laptop while pizza is cooking
-    chatForMinutes(10)
-
-    # Step 3: Check the box
-    if pizzaBox.isReady():
-        eat(pizzaBox.get())
-    else:
-        print("Not ready yet... back to chatting")
-        chatForMinutes(5)
-
-    # Step 4: Decide to 'wait' for it now
-    pizza = pizzaBox.waitUntilReady()  // blocking until pizza is done
-    eat(pizza)
-
-
-function makePizza():
-    # simulate cooking time
-    waitMinutes(12)
-    return "Delicious Pizza"
-
-
-# ---- Run the scenario ----
-main()
-~~~
-
-This syntax is a bit tedious, so python makes it easy to do the same with syntactic sugar. In fact python does this so well, that we need not think of futures at all!
-
-There's a library called `asyncio` which provides the engine - the event loop which executes the asynchronous functions, which are called coroutines, by the way. Let's take a look at a coroutine we saw earlier:
-
-~~~python
-async def job(n: int) -> int:
-    ...
-    return result
-~~~
-
-`async def` is a way of signalling that this function houses code that can be done in the background. It says to the caller - you need not wait for me to complete, go do your thing while I get your *order* ready.
-
-Calling `job()` does not start the job. In fact, it returns a *coroutine* - a function that can be paused and resumed. 
-
-To actually execute the coroutine, you need to hand it over to an executor. asyncio provides an event loop and APIs through which one can run jobs on the event loop.
+To actually run coroutines, use the event loop:
 
 ~~~python
 import asyncio
@@ -171,19 +141,22 @@ async def main():
 asyncio.run(main())
 ~~~
 
-Here the main() coroutine is scheduled on the event loop using `asyncio.run`.
+`asyncio.run` creates the loop, runs `main()` to completion, then cleans up.
 
-What's `await`? It awaits the completion of an *awaitable*, which can be either one of the following:
-1. a future - an object that holds an incomplete result
-2. a coroutine - a function that can be paused or resumed
-3. a task - a wrapper over coroutine (inheriting from future) that is scheduled on the event loop
+**What does `await` do (really)?**  
+It **suspends** the current coroutine until an **awaitable** completes, handing control back to the loop. Awaitables include:
 
-await can only be placed inside a coroutine (an async def function). Why? Because await tell the interpreter that this coroutine would like to suspend execution ([yield from](https://lerner.co.il/2020/05/08/making-sense-of-generators-coroutines-and-yield-from-in-python/)) until the awaitable is complete and the control is transferred to the event loop. When the awaitable is complete, the coroutine housing the await is rescheduled on the event loop.
+1. **Future** — an object representing an incomplete result  
+2. **Coroutine object** — produced by calling an `async def` function  
+3. **Task** — a Future subclass that wraps/schedules a coroutine on the loop
 
-Quiz:
+When the awaitable finishes, the loop **resumes** your coroutine *right after* the `await`. (Under the covers, this is very much like `yield from` with a fancy hat.)
 
-Can you predict the last line of output of the following two code snippets?
+---
 
+## 6) Quiz: sequential vs concurrent awaits
+
+**Sequential awaits**
 
 ~~~python
 import asyncio
@@ -195,10 +168,8 @@ async def say_after(delay, what):
 
 async def main():
     print(f"started at {time.strftime('%X')}")
-
     await say_after(1, 'hello')
     await say_after(2, 'world')
-
     print(f"finished at {time.strftime('%X')}")
 
 asyncio.run(main())
@@ -208,46 +179,45 @@ asyncio.run(main())
 started at 17:13:52
 hello
 world
-```
+````
+
 <details>
-    <summary>What comes next?</summary>
-    finished at 17:13:55
+  <summary>What comes next?</summary>
+  finished at 17:13:55
 </details>
 
+**Concurrent with tasks**
 
-~~~python
+```python
 async def main():
-    task1 = asyncio.create_task(
-        say_after(1, 'hello'))
-
-    task2 = asyncio.create_task(
-        say_after(2, 'world'))
+    task1 = asyncio.create_task(say_after(1, 'hello'))
+    task2 = asyncio.create_task(say_after(2, 'world'))
 
     print(f"started at {time.strftime('%X')}")
-
-    # Wait until both tasks are completed (should take
-    # around 2 seconds.)
     await task1
     await task2
-
     print(f"finished at {time.strftime('%X')}")
-~~~
+```
 
-~~~plaintext
+```plaintext
 started at 17:14:32
 hello
 world
-~~~
+```
 
 <details>
-    <summary>What comes next?</summary>
-    finished at 17:14:34
+  <summary>What comes next?</summary>
+  finished at 17:14:34
 </details>
 
+The second finishes in \~2s instead of \~3s because the sleeps overlap.
 
-~~~python
+---
+
+## 7) Task ordering (a tiny subtlety)
+
+```python
 import asyncio
-
 
 async def T1():
     print("T1 start")
@@ -275,9 +245,16 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-~~~
+```
+
+`create_task` schedules coroutines to start soon; you often see the **first** slice of each run in the order you created them. After a task hits an `await`, though, the loop resumes whichever task becomes ready next (timers, I/O). Your `await t1; await t2; await t3` only says when **`main`** waits on them, not how they interleave internally.
+
+---
+
+## 8) Demo video
 
 <!-- in your Markdown post -->
+
 <div class="video">
   <iframe
     src="https://www.youtube-nocookie.com/embed/3iGY4tb2dXw"
