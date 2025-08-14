@@ -7,9 +7,14 @@ tags: [hobbies]
 
 # Notes on async-await in Python
 
-I’ve glanced through coroutines in Python a few times already. It’s inevitable I’ll forget the details, so this note is a refresher for future-me (and, in some capacity, useful to a distinguished passerby).
+I've glanced through coroutines in Python a few times already. It's inevitable I'll forget the details, so this note is a refresher for future-me (and, in some capacity, useful to a distinguished passerby).
 
-We’re not taking apart the engine today. If the Python async world were a machine, we’re just pressing the buttons to see what lights up.
+We're not taking apart the engine today. If the Python async world were a machine, we're just pressing the buttons to see what lights up.
+
+---
+
+* TOC
+{:toc}
 
 ---
 
@@ -17,9 +22,9 @@ We’re not taking apart the engine today. If the Python async world were a mach
 
 **Is it the same as multithreading?** *Nope.*
 
-It’s easy to confuse async with threads (I did). They both try to reduce *wall-clock* time, but they do it differently.
+It's easy to confuse async with threads (I did). They both try to reduce *wall-clock* time, but they do it differently.
 
-Think about a single job. It alternates between **CPU time** (compute) and **I/O wait** (disk/network). With one job, you usually can’t beat its turnaround time without changing the algorithm.
+Think about a single job. It alternates between **CPU time** (compute) and **I/O wait** (disk/network). With one job, you usually can't beat its turnaround time without changing the algorithm.
 
 > **Turnaround time** = time to finish the job.  
 > T<sub>turnaround</sub> = T<sub>finish</sub> − T<sub>start</sub>
@@ -55,13 +60,13 @@ for t in threads:
 ~~~
 
 Here, the OS scheduler decides which thread runs.  
-*Footnote for Python folks:* due to the **GIL**, only one thread executes Python bytecode at a time in CPython. Threads still help when you spend time waiting on I/O; they don’t speed up CPU-bound Python code. (For CPU-bound work, think **multprocessing** or native extensions.)
+*Footnote for Python folks:* due to the **GIL**, only one thread executes Python bytecode at a time in CPython. Threads still help when you spend time waiting on I/O; they don't speed up CPU-bound Python code. (For CPU-bound work, think **multprocessing** or native extensions.)
 
 **Where threads bite (and why async exists):**
 - Shared-state complexity (locks, races, heisenbugs).
 - Context-switch overhead when you scale out.
 - In CPython, limited wins for CPU-bound work.
-- Hard to express “do these 200 I/O things, then continue” without a small forest of threads.
+- Hard to express "do these 200 I/O things, then continue" without a small forest of threads.
 
 Async tackles the same class of problems (lots of I/O) with a different **control-flow style**.
 
@@ -71,7 +76,9 @@ Async tackles the same class of problems (lots of I/O) with a different **contro
 
 Picture an **event loop**: a loop that drives a queue of tasks. Tasks run until they **await** something, then politely **yield**. When that thing is ready, the loop resumes them right after the `await`. This is **cooperative** scheduling (no preemption by the loop itself).
 
-Threads are like trying to hold ten phone conversations on ten different handsets at once; async is putting each call on speaker, hitting “mute,” and letting the callers shout “I’m back!” when they need your attention.
+
+> Threads are like trying to hold ten phone conversations on ten different handsets at once; async is putting each call on speaker, hitting "mute," and letting the callers shout "I'm back!" when they need your attention.
+
 ---
 
 ## 3) Coroutines with `asyncio`
@@ -118,17 +125,19 @@ result_future = started_but_unfinished_job()
 
 A **future** is a container for a result that will exist *later*.
 
-Imagine a very advanced pizzeria: you place an order and receive a **box** immediately. The pizza will “materialize” in the box when it’s ready. You chat, you peek, you wait only when you actually want to eat. The box is the **future**: the job is underway; you’ll collect the result when it’s done.
+Imagine a very advanced pizzeria: you place an order and receive a **box** immediately. The pizza will "materialize" in the box when it's ready. You chat, you peek, you wait only when you actually want to eat. The box is the **future**: the job is underway; you'll collect the result when it's done.
 
-Python smooths this so well that most of the time you don’t think about futures directly.
+Python smooths this so well that most of the time you don't think about futures directly.
 
 ---
 
 ## 5) `async` / `await` in practice
 
-Calling an `async def` function returns a **coroutine object**; it doesn’t run until you **await** it or wrap it in a **Task**.
+`async def` marks a function as a **coroutine**. When you call it, nothing runs yet-you get a *coroutine object* (something that can be paused and resumed).
 
-To actually run coroutines, use the event loop:
+To actually execute it, either **`await`** the coroutine inside another coroutine, or wrap it in a **Task** with `asyncio.create_task()` and await the task later. The **event loop** drives it, resuming right after each `await`.
+
+"Background" here means *non-blocking for you*: the coroutine yields control at `await` so other coroutines can run. It's still usually the **same thread** unless you explicitly offload blocking work to a thread/process pool via `asyncio.to_thread()` or `loop.run_in_executor()`.
 
 ~~~python
 import asyncio
@@ -144,77 +153,19 @@ asyncio.run(main())
 `asyncio.run` creates the loop, runs `main()` to completion, then cleans up.
 
 **What does `await` do (really)?**  
+
+
 It **suspends** the current coroutine until an **awaitable** completes, handing control back to the loop. Awaitables include:
 
-1. **Future** — an object representing an incomplete result  
-2. **Coroutine object** — produced by calling an `async def` function  
-3. **Task** — a Future subclass that wraps/schedules a coroutine on the loop
+1. **Future** - an object representing an incomplete result  
+2. **Coroutine object** - produced by calling an `async def` function  
+3. **Task** - a Future subclass that wraps/schedules a coroutine on the loop
 
 When the awaitable finishes, the loop **resumes** your coroutine *right after* the `await`. (Under the covers, this is very much like `yield from` with a fancy hat.)
 
 ---
 
-## 6) Quiz: sequential vs concurrent awaits
-
-**Sequential awaits**
-
-~~~python
-import asyncio
-import time
-
-async def say_after(delay, what):
-    await asyncio.sleep(delay)
-    print(what)
-
-async def main():
-    print(f"started at {time.strftime('%X')}")
-    await say_after(1, 'hello')
-    await say_after(2, 'world')
-    print(f"finished at {time.strftime('%X')}")
-
-asyncio.run(main())
-~~~
-
-```plaintext
-started at 17:13:52
-hello
-world
-````
-
-<details>
-  <summary>What comes next?</summary>
-  finished at 17:13:55
-</details>
-
-**Concurrent with tasks**
-
-```python
-async def main():
-    task1 = asyncio.create_task(say_after(1, 'hello'))
-    task2 = asyncio.create_task(say_after(2, 'world'))
-
-    print(f"started at {time.strftime('%X')}")
-    await task1
-    await task2
-    print(f"finished at {time.strftime('%X')}")
-```
-
-```plaintext
-started at 17:14:32
-hello
-world
-```
-
-<details>
-  <summary>What comes next?</summary>
-  finished at 17:14:34
-</details>
-
-The second finishes in \~2s instead of \~3s because the sleeps overlap.
-
----
-
-## 7) Task ordering (a tiny subtlety)
+## 6) Task ordering (a tiny subtlety)
 
 ```python
 import asyncio
@@ -251,10 +202,6 @@ if __name__ == "__main__":
 
 ---
 
-## 8) Demo video
-
-<!-- in your Markdown post -->
-
 <div class="video">
   <iframe
     src="https://www.youtube-nocookie.com/embed/3iGY4tb2dXw"
@@ -264,3 +211,77 @@ if __name__ == "__main__":
     allowfullscreen
   ></iframe>
 </div>
+
+---
+
+## 7) Quiz: sequential vs concurrent awaits
+
+**Sequential awaits**
+
+~~~python
+import asyncio
+import time
+
+async def say_after(delay, what):
+    await asyncio.sleep(delay)
+    print(what)
+
+async def main():
+    print(f"started at {time.strftime('%X')}")
+    await say_after(1, 'hello')
+    await say_after(2, 'world')
+    print(f"finished at {time.strftime('%X')}")
+
+asyncio.run(main())
+~~~
+
+**Output:**
+```plaintext
+started at 17:13:52
+hello
+world
+````
+
+<details>
+  <summary>What comes next?</summary>
+  finished at 17:13:55
+</details>
+
+---
+
+**Concurrent with tasks**
+
+```python
+async def main():
+    task1 = asyncio.create_task(say_after(1, 'hello'))
+    task2 = asyncio.create_task(say_after(2, 'world'))
+
+    print(f"started at {time.strftime('%X')}")
+    await task1
+    await task2
+    print(f"finished at {time.strftime('%X')}")
+```
+
+**Output:**
+```plaintext
+started at 17:14:32
+hello
+world
+```
+
+<details>
+  <summary>What comes next?</summary>
+  finished at 17:14:34 <br>
+  The second finishes in ~2s instead of ~3s because the sleeps overlap.
+</details>
+
+---
+
+## 8) Summary
+
+You don't need to master every asyncio API right now. Just remember:
+- `async def` creates a coroutine
+- `await` pauses for something else to finish
+- The *event loop* is the traffic cop keeping it all moving
+
+The rest you'll pick up the next time you forget. Or just do what I did - ask your favourite LLM :)
