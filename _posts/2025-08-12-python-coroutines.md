@@ -60,7 +60,7 @@ for t in threads:
 ~~~
 
 Here, the OS scheduler decides which thread runs.  
-*Footnote for Python folks:* due to the **GIL**, only one thread executes Python bytecode at a time in CPython. Threads still help when you spend time waiting on I/O; they don't speed up CPU-bound Python code. (For CPU-bound work, think **multprocessing** or native extensions.)
+*Footnote for Python folks:* due to the **GIL**, only one thread executes Python bytecode at a time in CPython. Threads still help when you spend time waiting on I/O; they don't speed up CPU-bound Python code. (For CPU-bound work, think **multiprocessing** or native extensions.)
 
 **Where threads bite (and why async exists):**
 - Shared-state complexity (locks, races, heisenbugs).
@@ -74,7 +74,7 @@ Async tackles the same class of problems (lots of I/O) with a different **contro
 
 ## 2) Event loop: the mental model
 
-Picture an **event loop**: a loop that drives a queue of tasks. Tasks run until they **await** something, then politely **yield**. When that thing is ready, the loop resumes them right after the `await`. This is **cooperative** scheduling (no preemption by the loop itself).
+Picture an **event loop**: a loop that drives a queue of tasks. Tasks run until they **await** an awaitable, then politely **yield**. When the awaitable is ready, the loop resumes the task right after the `await`. This is **cooperative** scheduling (no preemption by the loop itself).
 
 
 > Threads are like trying to hold ten phone conversations on ten different handsets at once; async is putting each call on speaker, hitting "mute," and letting the callers shout "I'm back!" when they need your attention.
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ~~~
 
-Things to keep in your head:
+Things to keep in your mind:
 - **Futures**
 - **`asyncio`** and a few core APIs
 - Language constructs: **`async` / `await`**
@@ -125,7 +125,13 @@ result_future = started_but_unfinished_job()
 
 A **future** is a container for a result that will exist *later*.
 
-Imagine a very advanced pizzeria: you place an order and receive a **box** immediately. The pizza will "materialize" in the box when it's ready. You chat, you peek, you wait only when you actually want to eat. The box is the **future**: the job is underway; you'll collect the result when it's done.
+Say you order a pizza at a restaurant and they hand you a box, and ask you to take a seat at a table nearby - strange! This is a high-tech restaurant and they say you need not come over to the counter to collect your order, the pizza will materialize inside your box when it's ready!!
+
+You marvel at the rate technology is progressing and you get busy chatting with your dining companion, your friend or your laptop, depending on your social circle :)
+
+After 10 mins, you remember about the pizza and check the box by lifting the lid, it's not yet ready. It's alright - you get back to your interesting conversation. 5 more mins pass and you are hungry. This time, you keep the lid open because you have run out of topics to discuss and want to start eating as soon as the pizza arrives, and it appears in a couple of minutes. You are happy, and you once again can't help chuckling at rate of progress of technology.
+
+That box is the `future`. It's a container for job that has started and is being worked on, but may not be finished yet.
 
 Python smooths this so well that most of the time you don't think about futures directly.
 

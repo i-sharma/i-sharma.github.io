@@ -8,6 +8,6 @@ tags: [hobbies]
 # Multithreading Visualization
 
 - Understanding GIL
-- python and c multithreading visualizations
-- thread pinning
-- async visualization
+- Python and C multithreading visualizations
+- Thread pinning
+- Async visualization
