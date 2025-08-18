@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
 <div class="video">
   <iframe
-    src="https://www.youtube-nocookie.com/embed/3iGY4tb2dXw"
+    src="https://www.youtube-nocookie.com/embed/VmK_PutooMc"
     title="YouTube video"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
