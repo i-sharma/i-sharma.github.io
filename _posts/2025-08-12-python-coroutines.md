@@ -107,7 +107,7 @@ if __name__ == "__main__":
 Things to keep in your mind:
 - **Futures**
 - **`asyncio`** and a few core APIs
-- Language constructs: **`async` / `await`**
+- Language constructs: **`async`-`await`**
 
 `asyncio` provides the event loop and the primitives to schedule / pause / resume work.
 
@@ -127,9 +127,9 @@ A **future** is a container for a result that will exist *later*.
 
 Say you order a pizza at a restaurant and they hand you a box, and ask you to take a seat at a table nearby - strange! This is a high-tech restaurant and they say you need not come over to the counter to collect your order, the pizza will materialize inside your box when it's ready!!
 
-You marvel at the rate technology is progressing and you get busy chatting with your dining companion, your friend or your laptop, depending on your social circle :)
+You marvel at how quickly technology is progressing and you get busy chatting with your dining companion, your friend or your laptop, depending on your social circle :)
 
-After 10 mins, you remember about the pizza and check the box by lifting the lid, it's not yet ready. It's alright - you get back to your interesting conversation. 5 more mins pass and you are hungry. This time, you keep the lid open because you have run out of topics to discuss and want to start eating as soon as the pizza arrives, and it appears in a couple of minutes. You are happy, and you once again can't help chuckling at rate of progress of technology.
+After 10 mins, you remember about the pizza and check the box by lifting the lid, it's not yet ready. It's all right - you get back to your interesting conversation. 5 more mins pass and you are hungry. This time, you keep the lid open because you have run out of topics to discuss and want to start eating as soon as the pizza arrives, and it appears in a couple of minutes. You are happy, and you once again can't help chuckling at how fast tech is moving.
 
 That box is the `future`. It's a container for job that has started and is being worked on, but may not be finished yet.
 
@@ -137,7 +137,7 @@ Python smooths this so well that most of the time you don't think about futures 
 
 ---
 
-## 5) `async` / `await` in practice
+## 5) `async`-`await` in practice
 
 `async def` marks a function as a **coroutine**. When you call it, nothing runs yet-you get a *coroutine object* (something that can be paused and resumed).
 
@@ -249,7 +249,7 @@ world
 ````
 
 <details>
-  <summary>What comes next?</summary>
+  <summary>Predict the next line...</summary>
   finished at 17:13:55
 </details>
 
@@ -276,7 +276,7 @@ world
 ```
 
 <details>
-  <summary>What comes next?</summary>
+  <summary>Predict the next line...</summary>
   finished at 17:14:34 <br>
   The second finishes in ~2s instead of ~3s because the sleeps overlap.
 </details>
