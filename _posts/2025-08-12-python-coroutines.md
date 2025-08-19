@@ -2,7 +2,7 @@
 layout: post
 title: >
   Notes on async-await
-tags: [hobbies]
+tags: [tech-non-ai]
 ---
 
 # Notes on async-await in Python

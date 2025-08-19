@@ -51,9 +51,11 @@ author:
 menu:
   - title:             All Posts
     url:               /all/
-  - title:             AI agents
+  - title:             AI & Agents
     url:               /tag-ai-agents/
-  - title:             Hobbies
+  - title:             Tech (Non AI)
+    url:               /tag-tech-non-ai/
+  - title:             Hobbies & Life
     url:               /tag-hobbies/
   - title:             About
     url:               /about/

@@ -1,13 +1,9 @@
 ---
 layout: post
 title: >
-  Building Useful AI agents: Series
+  First attempt at building AI agents
 tags: [ai-agents]
 ---
-
-# Building useful AI agents: Series
-
-In this series of blog posts, I'll share my learnings on building AI agents that can do useful work.
 
 # What's an agent?
 
