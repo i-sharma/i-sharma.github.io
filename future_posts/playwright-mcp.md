@@ -1,0 +1,5 @@
+- what is mcp
+- setup mcp and python client (without llm) test
+  - transports
+  - important notes about the mcp protocol
+- playwright mcp
