@@ -2,7 +2,7 @@
 layout: post
 title: >
   Move semantics: Design and Rules of thumb
-tags: [hobbies]
+tags: [tech-non-ai]
 ---
 
 # Move semantics: Design and Rules of thumb

@@ -2,7 +2,7 @@
 layout: post
 title: >
   Multithreading Visualization
-tags: [hobbies]
+tags: [tech-non-ai]
 ---
 
 # Multithreading Visualization
