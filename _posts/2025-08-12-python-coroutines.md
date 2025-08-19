@@ -62,6 +62,8 @@ for t in threads:
 Here, the OS scheduler decides which thread runs.  
 *Footnote for Python folks:* due to the **GIL**, only one thread executes Python bytecode at a time in CPython. Threads still help when you spend time waiting on I/O; they don't speed up CPU-bound Python code. (For CPU-bound work, think **multiprocessing** or native extensions.)
 
+If you'd like to see multithreading visualization in C and Python, head over to [this blog](2025-08-12-multithreading-visualization.md).
+
 **Where threads bite (and why async exists):**
 - Shared-state complexity (locks, races, heisenbugs).
 - Context-switch overhead when you scale out.
