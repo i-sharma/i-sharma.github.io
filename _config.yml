@@ -56,7 +56,9 @@ menu:
   - title:             Tech (Non AI)
     url:               /tag-tech-non-ai/
   - title:             Hobbies & Life
-    url:               /tag-hobbies/
+    url:               /tag-hobbies-and-life/
+  - title:             Startups
+    url:               /tag-startups/
   - title:             About
     url:               /about/
 
