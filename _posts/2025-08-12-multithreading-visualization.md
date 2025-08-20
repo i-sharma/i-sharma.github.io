@@ -5,7 +5,7 @@ title: >
 tags: [tech-non-ai]
 ---
 
-# Multithreading experiment: C vs Python on EC2
+# Multithreading Visualization: C vs Python
 
 I wanted to see how threads actually behave on a real machine, not just in theory.  
 So I spun up an EC2 instance and ran both CPU-bound and I/O-mixed workloads in **C** and **Python**, with two variations:
@@ -79,7 +79,7 @@ In **C**:
 - Downside: if a pinned thread finishes early, that core may sit idle while others are still overloaded.
 
 In **Python**:
-- Because only one thread runs at a time (due to the GIL), cache locality is less relevant.  
+- Even when only one thread runs at a time (due to the GIL), cache locality still matters for per-thread latency and determinism, and it becomes crucial when threads execute native C code or perform blocking I/O that releases the GIL.
 - Threads may migrate, but since there’s no true parallelism in CPU-bound code, the benefits of pinning don’t materialize.
 
 ---
@@ -91,7 +91,7 @@ In **Python**:
 - **Python (pinned or not)**: Same bottleneck — the GIL. No true parallelism for CPU-bound tasks.  
 - **I/O workloads**: Python threads are still useful for overlapping I/O waits, since the GIL is released during blocking I/O.
 
-![Threading comparison](/assets/img/posts/multithreading_visualization_c_py/threading_comparison_diagram.svg)
+![Threading comparison](/assets/img/posts/multithreading_visualization_c_py/threading_comparison_diagram.png)
 
 ---
 
