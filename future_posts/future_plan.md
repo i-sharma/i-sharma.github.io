@@ -1,3 +1,42 @@
+Discarded:
+- 2025-03-13-mcp.md
+
+
+# 2024-07-22-finding-chords.md
+
+---
+
+# 2025-03-13-react-codeact.md
+
+---
+
+# 2025-03-13-writing-prompts.md
+
+### How to prompt
+
+- explain briefly and to the point what needs to be done. be very specific
+- provide enough context
+- Sample output
+- roleplay
+- guidelines
+  
+
+How to test prompts and tool descriptions?
+  We put a lot of effort into the descriptions and specs for these tools across a wide variety of agentic tasks. We tested them to uncover any ways that the model might misunderstand the spec, or the possible pitfalls of using the tools, then edited the descriptions to preempt these problems. We believe that much more attention should go into designing tool interfaces for models, in the same way that a large amount of attention goes into designing tool interfaces for humans.
+  https://www.anthropic.com/engineering/swe-bench-sonnet
+
+  https://platform.openai.com/docs/guides/prompt-generation
+
+- Context Window
+- Oneshot 
+- Roleplay
+- Tell it specifically what to do
+ 
+---
+
+# 'Notes on ai agents - from notion.md'
+
+```markdown
 [Converging on a General-Purpose AI Agent Architecture.pdf](attachment:81f5a03a-4aa3-4c96-a89e-32d5945ad7f4:Converging_on_a_General-Purpose_AI_Agent_Architecture.pdf)
 
 **One Agent**  
@@ -60,3 +99,90 @@
 - https://gist.github.com/renschni/4fbc70b31bad8dd57f3370239dccd58f
 - https://byteatatime.dev/posts/cursor-prompt-analysis/
 - https://docs.anthropic.com/en/release-notes/system-prompts
+```
+
+
+---
+
+# RAII-in-python.md
+
+- RAII in cpp
+- with - __enter__, __exit__
+- async with - __aenter__, __aexit__
+
+---
+
+# 'all tech is tools.md'
+
+---
+
+# 'claude code as a general purpose agent.md'
+
+claude code + mcps
+
+experiments
+https://docs.google.com/document/d/1x7C4xnsCGyevlFSmADgt-4D8lLQidByXWBA3imAw0gc/edit?tab=t.0
+
+gemini cli mcps experiments as well
+
+---
+
+# 'llm temperature.md'
+
+tweet - see gpt
+https://chatgpt.com/c/68a0e085-3780-8326-ba45-0cba09369be1
+
+---
+
+# most-imp.md
+
+let's address this issue:
+https://github.com/google-gemini/gemini-cli/issues/6219
+fetch the issue, understand it, then walk me through your plan to fix it.
+we'll need to clone the git repo when I approve your plan
+
+with claude code, gemini, cline, augment code and openhands
+
++ build your own agent bench 
+
+then take things from deepagents and manus to test them out
+
+
+Fucking awesome - like that building browser blog that's been getting attention
+
+---
+
+# on_experimental_workbench.md
+
+Ishan Repost Tweet
+
+---
+
+# on_modes_of_working.md
+
+- Execution Mode
+- Constraint Goal-oriented thinking
+- Free-mode
+- Here you are free to explore: let your mind wonder, don't force an outcome
+
+Your mind takes what it has learnt in Execution modes + your goal and shows your new paths.
+
+---
+
+# playwright-mcp.md
+
+- what is mcp
+- setup mcp and python client (without llm) test
+  - transports
+  - important notes about the mcp protocol
+- playwright mcp
+
+---
+
+# trio.md
+
+https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/#go-statement-considered-harmful
+
+anyio
+
+---
