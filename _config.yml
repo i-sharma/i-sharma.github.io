@@ -51,6 +51,8 @@ author:
 menu:
   - title:             All Posts
     url:               /all/
+  - title:             Guitar Scales Visualizer
+    url:               /guitar-scales-visualizer/
   - title:             AI & Agents
     url:               /tag-ai-agents/
   - title:             Tech (Non AI)

@@ -29,5 +29,9 @@ end
 # remove once fixed upstream
 gem "json"
 
+# Fixes error: `require': cannot load such file -- csv (LoadError)
+# remove once fixed upstream
+gem "csv"
+
 gem 'wdm' if Gem.win_platform?
 gem "tzinfo-data" if Gem.win_platform?

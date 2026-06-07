@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guitar Scales Visualizer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #fff; font-family: system-ui, sans-serif; padding: 24px; }
+    #app { max-width: 1020px; margin: 0 auto; }
+    h1 { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; color: #111827; letter-spacing: -0.01em; }
+    #fretboard-container { overflow-x: auto; margin: 16px 0; }
+    svg#fretboard { display: block; }
+
+    /* Top controls */
+    #controls-top {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group > label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    select {
+      padding: 6px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      background: #fff;
+      cursor: pointer;
+      color: #1a1a1a;
+    }
+    select:focus { outline: 2px solid #2980b9; outline-offset: 1px; }
+
+    /* View tabs */
+    #view-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .tab-btn {
+      padding: 6px 18px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #f9fafb;
+      font-size: 14px;
+      cursor: pointer;
+      color: #374151;
+      font-family: inherit;
+    }
+    .tab-btn.active {
+      background: #1a1a1a;
+      color: #fff;
+      border-color: #1a1a1a;
+    }
+
+    /* CAGED shape controls */
+    #caged-controls {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      min-height: 34px;
+    }
+    #caged-controls .caged-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-right: 2px;
+    }
+    .shape-btn {
+      padding: 5px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 5px;
+      background: #f9fafb;
+      font-size: 13px;
+      cursor: pointer;
+      color: #374151;
+      font-family: inherit;
+    }
+    .shape-btn.active {
+      background: #2980b9;
+      color: #fff;
+      border-color: #2980b9;
+    }
+
+    /* Filter panel */
+    #filter-panel {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .filter-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .filter-row .row-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      width: 68px;
+      flex-shrink: 0;
+    }
+    .degree-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.08);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      opacity: 0.3;
+      transition: opacity 0.12s;
+      font-family: inherit;
+    }
+    .degree-btn.on { opacity: 1; }
+    .preset-btn {
+      padding: 5px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 5px;
+      background: #f9fafb;
+      font-size: 13px;
+      cursor: pointer;
+      color: #374151;
+      font-family: inherit;
+    }
+    .preset-btn:hover:not(:disabled) { background: #f3f4f6; }
+    .preset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Show degrees toggle */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toggle-row label {
+      font-size: 13px;
+      color: #374151;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-row input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+      accent-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Guitar Scales Visualizer</h1>
+    <div id="controls-top"></div>
+    <div id="view-tabs"></div>
+    <div id="caged-controls"></div>
+    <div id="fretboard-container">
+      <svg id="fretboard"></svg>
+    </div>
+    <div id="filter-panel"></div>
+  </div>
+
+  <script>
+    // === SVG HELPERS ===
+    function el(tag, attrs = {}) {
+      const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+      return e;
+    }
+    function svgRect(parent, x, y, w, h, fill) {
+      parent.appendChild(el('rect', { x, y, width: w, height: h, fill }));
+    }
+    function svgLine(parent, x1, y1, x2, y2, stroke, strokeWidth = 1) {
+      parent.appendChild(el('line', { x1, y1, x2, y2, stroke, 'stroke-width': strokeWidth }));
+    }
+    function svgCircle(parent, cx, cy, r, fill, stroke = 'none', strokeWidth = 0, opacity = 1) {
+      parent.appendChild(el('circle', { cx, cy, r, fill, stroke, 'stroke-width': strokeWidth, opacity }));
+    }
+    function svgText(parent, x, y, content, fill, fontSize = '12px', fontWeight = '400') {
+      const t = el('text', {
+        x, y, fill, 'font-size': fontSize, 'font-weight': fontWeight,
+        'text-anchor': 'middle', 'dominant-baseline': 'middle',
+        'font-family': 'system-ui, sans-serif',
+      });
+      t.textContent = content;
+      parent.appendChild(t);
+    }
+
+    // === LAYOUT CONSTANTS ===
+    const NUM_STRINGS = 6;
+    const NUM_FRETS = 18;
+    const STRING_SPACING = 28;
+    const FRET_WIDTH = 48;
+    const PAD_LEFT = 58;
+    const PAD_TOP = 24;
+    const PAD_BOTTOM = 32;
+    const NUT_WIDTH = 4;
+    const DOT_RADIUS = 12;
+
+    const SVG_WIDTH = PAD_LEFT + NUM_FRETS * FRET_WIDTH + 24;
+    const SVG_HEIGHT = PAD_TOP + (NUM_STRINGS - 1) * STRING_SPACING + PAD_BOTTOM;
+
+    const STRING_NAMES = ['E', 'A', 'D', 'G', 'B', 'e'];
+    const SINGLE_DOT_FRETS = [3, 5, 7, 9, 15, 17];
+    const DOUBLE_DOT_FRET = 12;
+
+    function stringY(s) { return PAD_TOP + (NUM_STRINGS - 1 - s) * STRING_SPACING; }
+    function fretCenterX(f) { return PAD_LEFT + (f - 0.5) * FRET_WIDTH; }
+    function fretLineX(f) { return PAD_LEFT + f * FRET_WIDTH; }
+
+    function drawFretboard(svg) {
+      svg.innerHTML = '';
+      svg.setAttribute('width', SVG_WIDTH);
+      svg.setAttribute('height', SVG_HEIGHT);
+
+      svgRect(svg, 0, 0, SVG_WIDTH, SVG_HEIGHT, '#ffffff');
+
+      // Position marker dots
+      const markerY = (stringY(2) + stringY(3)) / 2;
+      SINGLE_DOT_FRETS.forEach(f => {
+        svgCircle(svg, fretCenterX(f), markerY, 5, '#d1d5db');
+      });
+      svgCircle(svg, fretCenterX(DOUBLE_DOT_FRET), stringY(1), 5, '#d1d5db');
+      svgCircle(svg, fretCenterX(DOUBLE_DOT_FRET), stringY(4), 5, '#d1d5db');
+
+      // Strings
+      for (let s = 0; s < NUM_STRINGS; s++) {
+        const y = stringY(s);
+        const sw = 0.8 + (NUM_STRINGS - 1 - s) * 0.35;
+        svgLine(svg, PAD_LEFT, y, fretLineX(NUM_FRETS), y, '#374151', sw);
+      }
+
+      // Nut
+      svgLine(svg, PAD_LEFT, stringY(0), PAD_LEFT, stringY(NUM_STRINGS - 1), '#1a1a1a', NUT_WIDTH);
+
+      // Fret lines
+      for (let f = 1; f <= NUM_FRETS; f++) {
+        svgLine(svg, fretLineX(f), stringY(0), fretLineX(f), stringY(NUM_STRINGS - 1), '#9ca3af', 1);
+      }
+
+      // String labels
+      STRING_NAMES.forEach((name, s) => {
+        svgText(svg, 12, stringY(s), name, '#374151', '13px', '600');
+      });
+
+      // Fret numbers
+      for (let f = 1; f <= NUM_FRETS; f++) {
+        svgText(svg, fretCenterX(f), stringY(NUM_STRINGS - 1) - 18, String(f), '#9ca3af', '11px');
+      }
+    }
+
+    // === MUSIC THEORY ===
+    const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    const SCALES = {
+      major:           [0, 2, 4, 5, 7, 9, 11],
+      minor:           [0, 2, 3, 5, 7, 8, 10],
+      majorPentatonic: [0, 2, 4, 7, 9],
+      minorPentatonic: [0, 3, 5, 7, 10],
+    };
+
+    // Pitch class (C=0) of each open string: low E, A, D, G, B, high e
+    const OPEN_STRINGS_PC = [4, 9, 2, 7, 11, 4];
+
+    function computeNoteMap(key, scaleType) {
+      const intervals = SCALES[scaleType];
+      const pcToDegree = new Map(intervals.map((semitones, idx) => [(key + semitones) % 12, idx]));
+
+      const result = new Map();
+      for (let s = 0; s < NUM_STRINGS; s++) {
+        for (let f = 0; f <= NUM_FRETS; f++) {
+          const pc = (OPEN_STRINGS_PC[s] + f) % 12;
+          if (pcToDegree.has(pc)) {
+            result.set(`${s}-${f}`, pcToDegree.get(pc));
+          }
+        }
+      }
+      return result;
+    }
+
+    function getRootFretOnLowE(key) {
+      const f = (key - 4 + 12) % 12;
+      return f === 0 ? 12 : f;
+    }
+
+    const CAGED_OFFSETS = [
+      [0,  4],  // Shape 1 (E shape)
+      [2,  7],  // Shape 2 (D shape)
+      [4,  9],  // Shape 3 (C shape)
+      [7, 11],  // Shape 4 (A shape)
+      [9, 14],  // Shape 5 (G shape)
+    ];
+
+    function getShapeWindow(key, shapeIdx) {
+      const root = getRootFretOnLowE(key);
+      const [lo, hi] = CAGED_OFFSETS[shapeIdx];
+      return [root + lo, root + hi];
+    }
+
+    // === STATE ===
+    const DEGREE_COLORS = [
+      '#e74c3c', // degree 1 — red
+      '#e67e22', // degree 2 — orange
+      '#f1c40f', // degree 3 — yellow
+      '#27ae60', // degree 4 — green
+      '#2980b9', // degree 5 — blue
+      '#8e44ad', // degree 6 — purple
+      '#e91e8c', // degree 7 — pink
+    ];
+
+    const state = {
+      key: 0,
+      scaleType: 'major',
+      view: 'fullNeck',
+      cagedShape: 0,
+      activeDegrees: new Set([0, 1, 2, 3, 4, 5, 6]),
+      showDegrees: false,
+    };
+
+    // === RENDERING ===
+    function render() {
+      const svg = document.getElementById('fretboard');
+      const noteMap = computeNoteMap(state.key, state.scaleType);
+
+      drawFretboard(svg);
+      drawNotes(svg, noteMap);
+      updateControlsUI();
+    }
+
+    function drawNotes(svg, noteMap) {
+      const shapeWindow = state.view === 'caged'
+        ? getShapeWindow(state.key, state.cagedShape)
+        : null;
+
+      noteMap.forEach((degreeIdx, key) => {
+        if (!state.activeDegrees.has(degreeIdx)) return;
+
+        const [s, f] = key.split('-').map(Number);
+        const color = DEGREE_COLORS[degreeIdx];
+
+        const cx = f === 0
+          ? PAD_LEFT - DOT_RADIUS - 6
+          : fretCenterX(f);
+        const cy = stringY(s);
+
+        let opacity = 1;
+        if (shapeWindow) {
+          const [lo, hi] = shapeWindow;
+          if (f < lo || f > hi) opacity = 0.2;
+        }
+
+        svgCircle(svg, cx, cy, DOT_RADIUS, color, 'none', 0, opacity);
+
+        if (state.showDegrees) {
+          const t = el('text', {
+            x: cx, y: cy,
+            fill: '#fff', 'font-size': '11px', 'font-weight': '700',
+            'text-anchor': 'middle', 'dominant-baseline': 'middle',
+            'font-family': 'system-ui, sans-serif',
+            opacity,
+          });
+          t.textContent = String(degreeIdx + 1);
+          svg.appendChild(t);
+        }
+      });
+    }
+
+    // === CONTROLS ===
+    function domDiv(className = '') {
+      const d = document.createElement('div');
+      if (className) d.className = className;
+      return d;
+    }
+    function domLabel(text, forId = '') {
+      const l = document.createElement('label');
+      l.textContent = text;
+      if (forId) l.htmlFor = forId;
+      return l;
+    }
+
+    function buildTopControls() {
+      const container = document.getElementById('controls-top');
+      container.innerHTML = '';
+
+      const keyGroup = domDiv('control-group');
+      keyGroup.appendChild(domLabel('Key'));
+      const keySelect = document.createElement('select');
+      CHROMATIC.forEach((note, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = note;
+        if (i === state.key) opt.selected = true;
+        keySelect.appendChild(opt);
+      });
+      keySelect.addEventListener('change', e => {
+        state.key = Number(e.target.value);
+        render();
+      });
+      keyGroup.appendChild(keySelect);
+      container.appendChild(keyGroup);
+
+      const scaleGroup = domDiv('control-group');
+      scaleGroup.appendChild(domLabel('Scale'));
+      const scaleSelect = document.createElement('select');
+      [
+        ['major',           'Major'],
+        ['minor',           'Minor'],
+        ['majorPentatonic', 'Major Pentatonic'],
+        ['minorPentatonic', 'Minor Pentatonic'],
+      ].forEach(([val, name]) => {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = name;
+        if (val === state.scaleType) opt.selected = true;
+        scaleSelect.appendChild(opt);
+      });
+      scaleSelect.addEventListener('change', e => {
+        state.scaleType = e.target.value;
+        const newLen = SCALES[state.scaleType].length;
+        state.activeDegrees = new Set([...Array(newLen).keys()]);
+        render();
+      });
+      scaleGroup.appendChild(scaleSelect);
+      container.appendChild(scaleGroup);
+    }
+
+    function buildViewTabs() {
+      const tabContainer = document.getElementById('view-tabs');
+      tabContainer.innerHTML = '';
+
+      [['fullNeck', 'Full Neck'], ['caged', 'CAGED Shapes']].forEach(([val, lbl]) => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn' + (state.view === val ? ' active' : '');
+        btn.textContent = lbl;
+        btn.addEventListener('click', () => { state.view = val; render(); });
+        tabContainer.appendChild(btn);
+      });
+
+      const cagedContainer = document.getElementById('caged-controls');
+      cagedContainer.innerHTML = '';
+
+      if (state.view === 'caged') {
+        const lbl = document.createElement('span');
+        lbl.className = 'caged-label';
+        lbl.textContent = 'Shape:';
+        cagedContainer.appendChild(lbl);
+
+        for (let i = 0; i < 5; i++) {
+          const btn = document.createElement('button');
+          btn.className = 'shape-btn' + (state.cagedShape === i ? ' active' : '');
+          btn.textContent = String(i + 1);
+          btn.addEventListener('click', () => { state.cagedShape = i; render(); });
+          cagedContainer.appendChild(btn);
+        }
+      }
+    }
+
+    function buildFilterPanel() {
+      const panel = document.getElementById('filter-panel');
+      panel.innerHTML = '';
+
+      const scaleLen = SCALES[state.scaleType].length;
+      const isPentatonic = scaleLen === 5;
+
+      const degreeRow = domDiv('filter-row');
+      const degreeLabel = document.createElement('span');
+      degreeLabel.className = 'row-label';
+      degreeLabel.textContent = 'Degrees';
+      degreeRow.appendChild(degreeLabel);
+
+      for (let i = 0; i < scaleLen; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'degree-btn' + (state.activeDegrees.has(i) ? ' on' : '');
+        btn.style.background = DEGREE_COLORS[i];
+        btn.textContent = String(i + 1);
+        btn.title = `Degree ${i + 1}`;
+        btn.addEventListener('click', () => {
+          if (state.activeDegrees.has(i)) {
+            state.activeDegrees.delete(i);
+          } else {
+            state.activeDegrees.add(i);
+          }
+          render();
+        });
+        degreeRow.appendChild(btn);
+      }
+      panel.appendChild(degreeRow);
+
+      const presetRow = domDiv('filter-row');
+      const presetLabel = document.createElement('span');
+      presetLabel.className = 'row-label';
+      presetLabel.textContent = 'Presets';
+      presetRow.appendChild(presetLabel);
+
+      [
+        { label: 'All',     degrees: [...Array(scaleLen).keys()], disabled: false },
+        { label: 'Triad',   degrees: [0, 2, 4],                   disabled: false },
+        { label: 'Seventh', degrees: [0, 2, 4, 6],                disabled: isPentatonic },
+      ].forEach(({ label: lbl, degrees, disabled }) => {
+        const btn = document.createElement('button');
+        btn.className = 'preset-btn';
+        btn.textContent = lbl;
+        btn.disabled = disabled;
+        btn.addEventListener('click', () => {
+          state.activeDegrees = new Set(degrees.filter(d => d < scaleLen));
+          render();
+        });
+        presetRow.appendChild(btn);
+      });
+
+      panel.appendChild(presetRow);
+    }
+
+    function buildShowDegreesToggle() {
+      const panel = document.getElementById('filter-panel');
+
+      const row = domDiv('toggle-row');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.id = 'show-degrees-cb';
+      cb.checked = state.showDegrees;
+      cb.addEventListener('change', e => {
+        state.showDegrees = e.target.checked;
+        render();
+      });
+      const lbl = domLabel('Show degree numbers', 'show-degrees-cb');
+      row.appendChild(cb);
+      row.appendChild(lbl);
+      panel.appendChild(row);
+    }
+
+    function updateControlsUI() {
+      buildTopControls();
+      buildViewTabs();
+      buildFilterPanel();
+      buildShowDegreesToggle();
+    }
+
+    // === INIT ===
+    render();
+  </script>
+</body>
+</html>
