@@ -299,23 +299,74 @@
       return result;
     }
 
-    function getRootFretOnLowE(key) {
-      const f = (key - 4 + 12) % 12;
-      return f === 0 ? 12 : f;
-    }
-
-    const CAGED_OFFSETS = [
-      [0,  4],  // Shape 1 (E shape)
-      [2,  7],  // Shape 2 (D shape)
-      [4,  9],  // Shape 3 (C shape)
-      [7, 11],  // Shape 4 (A shape)
-      [9, 14],  // Shape 5 (G shape)
+    // C major reference templates traced from the 5 CAGED positions in the sample chart.
+    // Minor and pentatonic views reuse the same position family through the relative major.
+    const CAGED_MAJOR_TEMPLATES = [
+      [[3, 5],     [2, 3, 5], [2, 3, 5], [2, 4, 5], [3, 5, 6], [3, 5]],
+      [[5, 7, 8],  [5, 7, 8], [5, 7],    [4, 5, 7], [5, 6, 8], [5, 7, 8]],
+      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
+      [[10, 12, 13], [10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [10, 12, 13]],
+      [[12, 13, 15], [12, 14, 15], [12, 14, 15], [12, 14], [12, 13, 15], [12, 13, 15]],
     ];
 
-    function getShapeWindow(key, shapeIdx) {
-      const root = getRootFretOnLowE(key);
-      const [lo, hi] = CAGED_OFFSETS[shapeIdx];
-      return [root + lo, root + hi];
+    function getCagedTemplateKey(key, scaleType) {
+      if (scaleType === 'minor' || scaleType === 'minorPentatonic') {
+        return (key + 3) % 12;
+      }
+      return key;
+    }
+
+    function getSignedSemitoneOffset(pc) {
+      return pc <= 6 ? pc : pc - 12;
+    }
+
+    function getOctaveShiftForTemplate(template, semitoneOffset) {
+      const octaveCandidates = [-12, 0, 12];
+      let bestShift = 0;
+      let bestScore = null;
+
+      octaveCandidates.forEach(octaveShift => {
+        const frets = template.flat().map(f => f + semitoneOffset + octaveShift);
+        const visibleCount = frets.filter(f => f >= 0 && f <= NUM_FRETS).length;
+        const overflow = frets.reduce((sum, f) => {
+          if (f < 0) return sum + Math.abs(f);
+          if (f > NUM_FRETS) return sum + (f - NUM_FRETS);
+          return sum;
+        }, 0);
+        const avgFret = frets.reduce((sum, f) => sum + f, 0) / frets.length;
+        const score = [visibleCount, -overflow, -Math.abs(avgFret - NUM_FRETS / 2)];
+
+        if (
+          !bestScore ||
+          score[0] > bestScore[0] ||
+          (score[0] === bestScore[0] && score[1] > bestScore[1]) ||
+          (score[0] === bestScore[0] && score[1] === bestScore[1] && score[2] > bestScore[2])
+        ) {
+          bestScore = score;
+          bestShift = octaveShift;
+        }
+      });
+
+      return bestShift;
+    }
+
+    function getCagedShapeNotes(key, scaleType, shapeIdx) {
+      const template = CAGED_MAJOR_TEMPLATES[shapeIdx];
+      const templateKey = getCagedTemplateKey(key, scaleType);
+      const semitoneOffset = getSignedSemitoneOffset(templateKey);
+      const octaveShift = getOctaveShiftForTemplate(template, semitoneOffset);
+      const notes = new Set();
+
+      template.forEach((stringFrets, s) => {
+        stringFrets.forEach(f => {
+          const translatedFret = f + semitoneOffset + octaveShift;
+          if (translatedFret >= 0 && translatedFret <= NUM_FRETS) {
+            notes.add(`${s}-${translatedFret}`);
+          }
+        });
+      });
+
+      return notes;
     }
 
     // === STATE ===
@@ -349,12 +400,13 @@
     }
 
     function drawNotes(svg, noteMap) {
-      const shapeWindow = state.view === 'caged'
-        ? getShapeWindow(state.key, state.cagedShape)
+      const shapeNotes = state.view === 'caged'
+        ? getCagedShapeNotes(state.key, state.scaleType, state.cagedShape)
         : null;
 
       noteMap.forEach((degreeIdx, key) => {
         if (!state.activeDegrees.has(degreeIdx)) return;
+        if (shapeNotes && !shapeNotes.has(key)) return;
 
         const [s, f] = key.split('-').map(Number);
         const color = DEGREE_COLORS[degreeIdx];
@@ -364,11 +416,7 @@
           : fretCenterX(f);
         const cy = stringY(s);
 
-        let opacity = 1;
-        if (shapeWindow) {
-          const [lo, hi] = shapeWindow;
-          if (f < lo || f > hi) opacity = 0.2;
-        }
+        const opacity = 1;
 
         svgCircle(svg, cx, cy, DOT_RADIUS, color, 'none', 0, opacity);
 
